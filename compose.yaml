@@ -11,9 +11,14 @@ services:
       - yoshi-db-data:/var/lib/postgresql
     networks:
       - yoshi-net
-
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U yoshi -d yoshi"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
   api:
-    image: docker.io/stackoverfloo/yoshi-server:v3
+    image: docker.io/stackoverfloo/yoshi-server:v4
     container_name: yoshi-api
     environment:
       DB_HOST: db
@@ -24,10 +29,11 @@ services:
     networks:
       - yoshi-net
     depends_on:
-      - db
+       db:
+        condition: service_healthy
 
   frontend:
-    image: docker.io/stackoverfloo/yoshi-frontend:v3
+    image: docker.io/stackoverfloo/yoshi-frontend:v5
     container_name: yoshi-frontend
     ports:
       - "8081:80"

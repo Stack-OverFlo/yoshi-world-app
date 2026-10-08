@@ -1,5 +1,6 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -11,77 +12,69 @@
     <header class="hero">
         <div class="container">
             <h1>🥚 Yoshi World 🥚</h1>
-            <p>Bienvenue dans le monde de Yoshi !</p>
+            <p>Welcome to Yoshi's world!</p>
         </div>
     </header>
 
     <main class="container">
         <section class="welcome">
-            <h2>Les Yoshis</h2>
+            <h2>Yoshis</h2>
             <p>
-                Découvre les Yoshis disponibles dans notre base de données.
+                Discover and manage Yoshis
             </p>
         </section>
-
-        <section id="yoshi-list" class="yoshi-list">
-            <p>Chargement des Yoshis...</p>
+        <section class="yoshi-manager">
+            <div class="form-card">
+                <h2 id="form-title">
+                    Add a Yoshi
+                </h2>
+                <form id="yoshi-form">
+                    <label for="yoshi-name">
+                        Name
+                    </label>
+                    <input
+                        id="yoshi-name"
+                        type="text"
+                        placeholder="Ex: Green Yoshi"
+                        maxlength="100"
+                        required>
+                    <label for="yoshi-color">
+                        Color
+                    </label>
+                    <input
+                        id="yoshi-color"
+                        type="text"
+                        placeholder="Ex: green"
+                        maxlength="50"
+                        required>
+                    <div class="form-actions">
+                        <button
+                            type="submit"
+                            class="primary-button">
+                            Save
+                        </button>
+                        <button
+                            type="button"
+                            id="cancel-button"
+                            class="secondary-button"
+                            hidden>
+                            Cancel
+                        </button>
+                    </div>
+                </form>
+            </div>
+            <section
+                id="yoshi-list"
+                class="yoshi-list">
+                <p>Loading Yoshis...</p>
+            </section>
         </section>
     </main>
-
     <footer>
-        <p>Yoshi World — Powered by Podman 🐢</p>
+        <p>
+            Yoshi World — Powered by Podman 🐢
+        </p>
     </footer>
-
-    <script>
-        async function loadYoshis() {
-            const list = document.getElementById("yoshi-list");
-
-            try {
-                const response = await fetch("/api/yoshis");
-
-                if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}`);
-                }
-
-                const yoshis = await response.json();
-
-                list.innerHTML = "";
-
-                yoshis.forEach((yoshi) => {
-                    const card = document.createElement("article");
-                    card.className = "yoshi-card";
-
-                    card.innerHTML = `
-                        <div class="yoshi-icon">${getIcon(yoshi.color)}</div>
-                        <h3>${yoshi.name}</h3>
-                        <p>Couleur : ${yoshi.color}</p>
-                    `;
-
-                    list.appendChild(card);
-                });
-
-            } catch (error) {
-                console.error(error);
-
-                list.innerHTML = `
-                    <p>
-                        Impossible de charger les Yoshis.
-                    </p>
-                `;
-            }
-        }
-
-        function getIcon(color) {
-            const icons = {
-                green: "🟢",
-                red: "🔴",
-                blue: "🔵"
-            };
-
-            return icons[color] || "🥚";
-        }
-
-        loadYoshis();
-    </script>
+    <script src="app.js"></script>
 </body>
 </html>

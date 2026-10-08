@@ -4,41 +4,74 @@
     padding: 0;
 }
 
+:root {
+    --green: #78b159;
+    --green-dark: #4f873d;
+    --green-light: #eaf5e5;
+    --red: #d9534f;
+    --text: #243024;
+    --muted: #667366;
+    --background: #f4f7f2;
+    --white: #ffffff;
+    --border: #dce5d8;
+}
+
 body {
     font-family: Arial, Helvetica, sans-serif;
-    background: #f4f7f2;
-    color: #243024;
+    background: var(--background);
+    color: var(--text);
     min-height: 100vh;
 }
+
+
+/* -------------------------
+   Layout
+------------------------- */
 
 .container {
     width: min(1100px, 90%);
     margin: 0 auto;
 }
 
+
+/* -------------------------
+   Header
+------------------------- */
+
 .hero {
-    background: #78b159;
+    background: linear-gradient(
+        135deg,
+        var(--green),
+        var(--green-dark)
+    );
+
     color: white;
-    padding: 60px 0;
+    padding: 55px 0;
     text-align: center;
 }
 
 .hero h1 {
     font-size: 3rem;
-    margin-bottom: 15px;
+    margin-bottom: 12px;
 }
 
 .hero p {
-    font-size: 1.2rem;
+    font-size: 1.15rem;
+    opacity: 0.95;
 }
 
+
+/* -------------------------
+   Main
+------------------------- */
+
 main {
-    padding: 50px 0;
+    padding: 50px 0 70px;
 }
 
 .welcome {
     text-align: center;
-    margin-bottom: 40px;
+    margin-bottom: 35px;
 }
 
 .welcome h2 {
@@ -47,26 +80,131 @@ main {
 }
 
 .welcome p {
-    color: #5d6b5d;
+    color: var(--muted);
 }
+
+
+/* -------------------------
+   Manager
+------------------------- */
+
+.yoshi-manager {
+    display: grid;
+    gap: 35px;
+}
+
+
+/* -------------------------
+   Form
+------------------------- */
+
+.form-card {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    padding: 30px;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.06);
+}
+
+.form-card h2 {
+    margin-bottom: 25px;
+}
+
+#yoshi-form {
+    display: grid;
+    gap: 10px;
+}
+
+#yoshi-form label {
+    font-weight: bold;
+    margin-top: 5px;
+}
+
+#yoshi-form input {
+    width: 100%;
+    padding: 12px 14px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    font-size: 1rem;
+    outline: none;
+}
+
+#yoshi-form input:focus {
+    border-color: var(--green);
+    box-shadow: 0 0 0 3px var(--green-light);
+}
+
+
+/* -------------------------
+   Buttons
+------------------------- */
+
+.form-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 15px;
+}
+
+button {
+    border: none;
+    border-radius: 10px;
+    padding: 11px 18px;
+    font-size: 0.95rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: transform 0.15s ease, opacity 0.15s ease;
+}
+
+button:hover {
+    transform: translateY(-1px);
+}
+
+button:active {
+    transform: translateY(0);
+}
+
+.primary-button {
+    background: var(--green);
+    color: white;
+}
+
+.secondary-button {
+    background: #e9eee7;
+    color: var(--text);
+}
+
+
+/* -------------------------
+   Yoshi cards
+------------------------- */
 
 .yoshi-list {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    grid-template-columns: repeat(
+        auto-fit,
+        minmax(230px, 1fr)
+    );
+
     gap: 25px;
 }
 
 .yoshi-card {
-    background: white;
-    border-radius: 16px;
-    padding: 30px;
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    padding: 25px;
     text-align: center;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
-    transition: transform 0.2s ease;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.06);
+    overflow-wrap: anywhere;
+    word-break: break-word;
+    transition:
+        transform 0.2s ease,
+        box-shadow 0.2s ease;
 }
 
 .yoshi-card:hover {
     transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
 }
 
 .yoshi-icon {
@@ -75,16 +213,89 @@ main {
 }
 
 .yoshi-card h3 {
-    font-size: 1.4rem;
-    margin-bottom: 10px;
+    font-size: 1.35rem;
+    margin-bottom: 8px;
 }
 
 .yoshi-card p {
-    color: #667366;
+    color: var(--muted);
+    overflow-wrap: anywhere;
+    word-break: break-word;
 }
+
+
+/* -------------------------
+   Card actions
+------------------------- */
+
+.yoshi-actions {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.edit-button {
+    background: var(--green-light);
+    color: var(--green-dark);
+}
+
+.delete-button {
+    background: #fde9e8;
+    color: var(--red);
+}
+
+
+/* -------------------------
+   Messages
+------------------------- */
+
+.empty-message,
+.error-message {
+    text-align: center;
+    padding: 30px;
+    color: var(--muted);
+}
+
+.error-message {
+    color: var(--red);
+}
+
+
+/* -------------------------
+   Footer
+------------------------- */
 
 footer {
     text-align: center;
     padding: 25px;
-    color: #667366;
+    color: var(--muted);
+}
+
+
+/* -------------------------
+   Responsive
+------------------------- */
+
+@media (max-width: 600px) {
+
+    .hero h1 {
+        font-size: 2.2rem;
+    }
+
+    main {
+        padding-top: 35px;
+    }
+
+    .form-card {
+        padding: 22px;
+    }
+
+    .yoshi-actions {
+        flex-direction: column;
+    }
+
+    .yoshi-actions button {
+        width: 100%;
+    }
 }
