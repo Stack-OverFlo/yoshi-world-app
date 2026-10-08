@@ -1,0 +1,16 @@
+FROM docker.io/library/python:3.14
+
+WORKDIR /api
+
+COPY requirements.txt .
+
+RUN pip install --no-cache-dir -r requirements.txt \
+    && useradd --create-home yoshi
+
+COPY server.py .
+
+EXPOSE 8080
+
+USER yoshi
+
+CMD ["python", "server.py"]

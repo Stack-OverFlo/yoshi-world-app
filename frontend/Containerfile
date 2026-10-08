@@ -1,0 +1,7 @@
+FROM docker.io/library/nginx:alpine
+
+COPY frontend/index.html /usr/share/nginx/html/index.html
+COPY frontend/style.css /usr/share/nginx/html/style.css
+COPY config/nginx.conf /etc/nginx/conf.d/default.conf
+
+EXPOSE 80

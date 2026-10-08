@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Yoshi World</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <header class="hero">
+        <div class="container">
+            <h1>🥚 Yoshi World 🥚</h1>
+            <p>Bienvenue dans le monde de Yoshi !</p>
+        </div>
+    </header>
+
+    <main class="container">
+        <section class="welcome">
+            <h2>Les Yoshis</h2>
+            <p>
+                Découvre les Yoshis disponibles dans notre base de données.
+            </p>
+        </section>
+
+        <section id="yoshi-list" class="yoshi-list">
+            <p>Chargement des Yoshis...</p>
+        </section>
+    </main>
+
+    <footer>
+        <p>Yoshi World — Powered by Podman 🐢</p>
+    </footer>
+
+    <script>
+        async function loadYoshis() {
+            const list = document.getElementById("yoshi-list");
+
+            try {
+                const response = await fetch("/api/yoshis");
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+
+                const yoshis = await response.json();
+
+                list.innerHTML = "";
+
+                yoshis.forEach((yoshi) => {
+                    const card = document.createElement("article");
+                    card.className = "yoshi-card";
+
+                    card.innerHTML = `
+                        <div class="yoshi-icon">${getIcon(yoshi.color)}</div>
+                        <h3>${yoshi.name}</h3>
+                        <p>Couleur : ${yoshi.color}</p>
+                    `;
+
+                    list.appendChild(card);
+                });
+
+            } catch (error) {
+                console.error(error);
+
+                list.innerHTML = `
+                    <p>
+                        Impossible de charger les Yoshis.
+                    </p>
+                `;
+            }
+        }
+
+        function getIcon(color) {
+            const icons = {
+                green: "🟢",
+                red: "🔴",
+                blue: "🔵"
+            };
+
+            return icons[color] || "🥚";
+        }
+
+        loadYoshis();
+    </script>
+</body>
+</html>

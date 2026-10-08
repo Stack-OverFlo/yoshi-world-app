@@ -1,0 +1,44 @@
+services:
+
+  db:
+    image: docker.io/library/postgres:18
+    container_name: yoshi-db
+    environment:
+      POSTGRES_DB: yoshi
+      POSTGRES_USER: yoshi
+      POSTGRES_PASSWORD: yoshi
+    volumes:
+      - yoshi-db-data:/var/lib/postgresql
+    networks:
+      - yoshi-net
+
+  api:
+    image: docker.io/stackoverfloo/yoshi-server:v3
+    container_name: yoshi-api
+    environment:
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_NAME: yoshi
+      DB_USER: yoshi
+      DB_PASSWORD: yoshi
+    networks:
+      - yoshi-net
+    depends_on:
+      - db
+
+  frontend:
+    image: docker.io/stackoverfloo/yoshi-frontend:v3
+    container_name: yoshi-frontend
+    ports:
+      - "8081:80"
+    networks:
+      - yoshi-net
+    depends_on:
+      - api
+
+volumes:
+  yoshi-db-data:
+    external: true # use the podman volume already existing
+networks:
+  yoshi-net:
+
