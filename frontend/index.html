@@ -19,79 +19,58 @@
     <main class="container">
         <section class="welcome">
             <h2>Yoshis</h2>
-            <p>
-                Discover and manage Yoshis
-            </p>
+            <p>Discover and manage Yoshis</p>
         </section>
         <section class="yoshi-manager">
             <div class="form-card">
-                <h2 id="form-title">
-                    Add a Yoshi
-                </h2>
+                <h2 id="form-title">Add a Yoshi</h2>
                 <form id="yoshi-form">
-                    <label for="yoshi-name">
-                        Name
-                    </label>
+                    <label for="yoshi-name">Name</label>
                     <input
                         id="yoshi-name"
                         type="text"
                         placeholder="Ex: Green Yoshi"
                         maxlength="100"
                         required>
-                    <label for="yoshi-color">
-                        Color
-                    </label>
+
+                    <label for="yoshi-color">Color</label>
                     <input
                         id="yoshi-color"
                         type="text"
                         placeholder="Ex: green"
                         maxlength="50"
                         required>
-                    <label for="yoshi-description">
-                        Description
-                    </label>
+
+                    <label for="yoshi-description">Description</label>
                     <textarea
                         id="yoshi-description"
                         placeholder="Describe this Yoshi..."
                         maxlength="500"
-                        rows="4">
-                    </textarea>
-                    <label for="yoshi-image">
-                        Image
-                    </label>
+                        rows="4"></textarea>
+
+                    <label for="yoshi-image">Image URL</label>
                     <input
                         id="yoshi-image"
                         type="text"
                         placeholder="/images/yoshi-red.png"
                         maxlength="500">
+
                     <div class="form-actions">
-                        <button
-                            type="submit"
-                            class="primary-button">
-                            Save
-                        </button>
-                        <button
-                            type="button"
-                            id="cancel-button"
-                            class="secondary-button"
-                            hidden>
-                            Cancel
-                        </button>
+                        <button type="submit" class="primary-button">Save</button>
+                        <button type="button" id="cancel-button" class="secondary-button" hidden>Cancel</button>
                     </div>
                 </form>
             </div>
-            <section
-                id="yoshi-list"
-                class="yoshi-list">
+
+            <section id="yoshi-list" class="yoshi-list" aria-live="polite">
                 <p>Loading Yoshis...</p>
             </section>
         </section>
     </main>
     <footer>
-        <p>
-            Yoshi World — Powered by Podman 🐢
-        </p>
+        <p>Yoshi World — Powered by Podman 🐢</p>
     </footer>
     <script src="app.js"></script>
 </body>
+
 </html>

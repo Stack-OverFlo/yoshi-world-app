@@ -1,88 +1,46 @@
 const API_URL = "/api/yoshis";
+
+// DOM elements
 const yoshiList = document.getElementById("yoshi-list");
 const form = document.getElementById("yoshi-form");
 const formTitle = document.getElementById("form-title");
 const nameInput = document.getElementById("yoshi-name");
 const colorInput = document.getElementById("yoshi-color");
-const cancelButton = document.getElementById("cancel-button");
 const descriptionInput = document.getElementById("yoshi-description");
 const imageInput = document.getElementById("yoshi-image");
+const cancelButton = document.getElementById("cancel-button");
+
 let editingYoshiId = null;
 
-
 // -------------------------
-// API
+// Helpers & API Wrapper
 // -------------------------
 
-async function getYoshis() {
-    const response = await fetch(API_URL);
-
-    if (!response.ok) {
-        throw new Error(`HTTP ${response.status}`);
-    }
-
-    return response.json();
-}
-
-
-async function createYoshi(name, color, description, image) {
-    const response = await fetch(API_URL, {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-            name,
-            color,
-            description,
-            image
-        })
+async function requestApi(endpoint = "", options = {}) {
+    const response = await fetch(`${API_URL}${endpoint}`, {
+        headers: { "Content-Type": "application/json", ...options.headers },
+        ...options
     });
 
     if (!response.ok) {
         throw new Error(`HTTP ${response.status}`);
     }
 
-    return response.json();
-}
-
-async function updateYoshi(id, name, color, description, image) {
-    const response = await fetch(`${API_URL}/${id}`, {
-        method: "PUT",
-        headers: {
-            "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-            name,
-            color,
-            description,
-            image
-        })
-    });
-
-    if (!response.ok) {
-        throw new Error(`HTTP ${response.status}`);
-    }
-
-    return response.json();
-}
-
-async function deleteYoshi(id) {
-    const response = await fetch(`${API_URL}/${id}`, {
-        method: "DELETE"
-    });
-
-    if (!response.ok) {
-        throw new Error(`HTTP ${response.status}`);
+    if (response.status !== 204) {
+        return response.json();
     }
 }
 
+function escapeHtml(value) {
+    return String(value ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+}
 
-// -------------------------
-// Display incredible Yoshis
-// -------------------------
-
-function getYoshiIcon(color) {
+function getYoshiIcon(color = "") {
     const icons = {
         green: "🟢",
         red: "🔴",
@@ -98,10 +56,15 @@ function getYoshiIcon(color) {
 
     return icons[color.toLowerCase()] || "🥚";
 }
+
+// -------------------------
+// IHM
+// -------------------------
+
 function renderYoshis(yoshis) {
     yoshiList.innerHTML = "";
 
-    if (yoshis.length === 0) {
+    if (!yoshis || yoshis.length === 0) {
         yoshiList.innerHTML = `<p class="empty-message">No Yoshi here.</p>`;
         return;
     }
@@ -111,9 +74,9 @@ function renderYoshis(yoshis) {
         card.className = "yoshi-card";
 
         let imageHtml = "";
+        const colorClass = yoshi.color ? yoshi.color.toLowerCase() : "";
 
         if (yoshi.image && yoshi.image.includes("yoshi_colors_asset_face")) {
-            const colorClass = yoshi.color.toLowerCase();
             imageHtml = `
                 <div class="yoshi-sprite-wrapper">
                     <div class="yoshi-sprite yoshi-sprite-${escapeHtml(colorClass)}"></div>
@@ -121,11 +84,12 @@ function renderYoshis(yoshis) {
             `;
         } else if (yoshi.image) {
             imageHtml = `
-                <img class="yoshi-image" src="${escapeHtml(yoshi.image)}" alt="${escapeHtml(yoshi.name)}"
-                     onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\"yoshi-icon\">${getYoshiIcon(yoshi.color)}</div>';">
+                <img class="yoshi-image" 
+                     src="${escapeHtml(yoshi.image)}" 
+                     alt="${escapeHtml(yoshi.name)}"
+                     onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\\'yoshi-icon\\'>${getYoshiIcon(yoshi.color)}</div>';">
             `;
         } else {
-            // Émoji par défaut
             imageHtml = `<div class="yoshi-icon">${getYoshiIcon(yoshi.color)}</div>`;
         }
 
@@ -144,155 +108,48 @@ function renderYoshis(yoshis) {
     });
 }
 
-function escapeHtml(value) {
-    return String(value)
-        .replaceAll("&", "&amp;")
-        .replaceAll("<", "&lt;")
-        .replaceAll(">", "&gt;")
-        .replaceAll('"', "&quot;")
-        .replaceAll("'", "&#039;");
-}
-
-
-// -------------------------
-// Loading 
-// -------------------------
-
 async function loadYoshis() {
     try {
-        yoshiList.innerHTML = `
-            <p>Chargement des Yoshis...</p>
-        `;
-        const yoshis = await getYoshis();
+        yoshiList.innerHTML = `<p class="empty-message">Loading Yoshis...</p>`;
+        const yoshis = await requestApi();
         renderYoshis(yoshis);
     } catch (error) {
-        console.error(error);
-        yoshiList.innerHTML = `
-            <p class="error-message">
-                Impossible to load the Yoshis.
-            </p>
-        `;
+        console.error("Error loading :", error);
+        yoshiList.innerHTML = `<p class="error-message">Impossible to load the Yoshis.</p>`;
     }
 }
-
-
-// -------------------------
-// Form
-// -------------------------
-
-form.addEventListener("submit", async (event) => {
-    event.preventDefault();
-
-    const name = nameInput.value.trim();
-    const color = colorInput.value.trim();
-    const description = descriptionInput.value.trim();
-    const image = imageInput.value.trim();
-    if (!name || !color) {
-        return;
-    }
-
-    try {
-       if (editingYoshiId === null) {
-        await createYoshi(
-            name,
-            color,
-            description,
-            image
-        );
-    } else {
-        await updateYoshi(
-            editingYoshiId,
-            name,
-            color,
-            description,
-            image
-        );
-    }
-    resetForm();
-    await loadYoshis();
-    } catch (error) {
-        console.error(error);
-        alert("Yoshi just ate the server. Sorry about that...");
-    }
-});
-
-
-// -------------------------
-// Modifier
-// -------------------------
 
 async function startEditYoshi(id) {
     try {
-        const response = await fetch(`${API_URL}/${id}`);
-        if (!response.ok) {
-            throw new Error(`HTTP ${response.status}`);
-        }
-        const yoshi = await response.json();
+        const yoshi = await requestApi(`/${id}`);
         editingYoshiId = yoshi.id;
-        nameInput.value = yoshi.name;
-        colorInput.value = yoshi.color;
+
+        nameInput.value = yoshi.name || "";
+        colorInput.value = yoshi.color || "";
         descriptionInput.value = yoshi.description || "";
         imageInput.value = yoshi.image || "";
+
         formTitle.textContent = "Modify a Yoshi";
         cancelButton.hidden = false;
         nameInput.focus();
     } catch (error) {
-        console.error(error);
+        console.error("Error editing Yoshi :", error);
         alert("Impossible to load this Yoshi.");
     }
 }
 
-
-// -------------------------
-// Delete poor Yoshis
-// -------------------------
-
 async function removeYoshi(id) {
-    const confirmed = confirm(
-        "Are you sure to kill this lovely Yoshi ?"
-    );
-
-    if (!confirmed) {
-        return;
-    }
+    const confirmed = confirm("Are you sure to kill this lovely Yoshi ?");
+    if (!confirmed) return;
 
     try {
-        await deleteYoshi(id);
+        await requestApi(`/${id}`, { method: "DELETE" });
         await loadYoshis();
-
     } catch (error) {
-        console.error(error);
+        console.error("Error killing Yoshi :", error);
         alert("Impossible to delete this Yoshi. He's too strong");
     }
 }
-
-
-// -------------------------
-// Cards actions
-// -------------------------
-
-yoshiList.addEventListener("click", (event) => {
-    const editButton = event.target.closest(".edit-button");
-    const deleteButton = event.target.closest(".delete-button");
-
-    if (editButton) {
-        startEditYoshi(Number(editButton.dataset.id));
-    }
-
-    if (deleteButton) {
-        removeYoshi(Number(deleteButton.dataset.id));
-    }
-});
-
-
-// -------------------------
-// Cancel editing
-// -------------------------
-
-cancelButton.addEventListener("click", () => {
-    resetForm();
-});
-
 
 function resetForm() {
     editingYoshiId = null;
@@ -301,9 +158,51 @@ function resetForm() {
     cancelButton.hidden = true;
 }
 
+// -------------------------
+// Events
+// -------------------------
 
-// -------------------------
-// Start
-// -------------------------
+form.addEventListener("submit", async (event) => {
+    event.preventDefault();
+
+    const payload = {
+        name: nameInput.value.trim(),
+        color: colorInput.value.trim(),
+        description: descriptionInput.value.trim(),
+        image: imageInput.value.trim()
+    };
+
+    if (!payload.name || !payload.color) return;
+
+    try {
+        if (editingYoshiId === null) {
+            await requestApi("", {
+                method: "POST",
+                body: JSON.stringify(payload)
+            });
+        } else {
+            await requestApi(`/${editingYoshiId}`, {
+                method: "PUT",
+                body: JSON.stringify(payload)
+            });
+        }
+
+        resetForm();
+        await loadYoshis();
+    } catch (error) {
+        console.error("Error saving Yoshi :", error);
+        alert("Yoshi just ate the server. Sorry about that...");
+    }
+});
+
+yoshiList.addEventListener("click", (event) => {
+    const editBtn = event.target.closest(".edit-button");
+    const deleteBtn = event.target.closest(".delete-button");
+
+    if (editBtn) startEditYoshi(Number(editBtn.dataset.id));
+    if (deleteBtn) removeYoshi(Number(deleteBtn.dataset.id));
+});
+
+cancelButton.addEventListener("click", resetForm);
 
 loadYoshis();

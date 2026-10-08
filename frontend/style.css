@@ -23,7 +23,6 @@ body {
     min-height: 100vh;
 }
 
-
 /* -------------------------
    Layout
 ------------------------- */
@@ -32,7 +31,6 @@ body {
     width: min(1100px, 90%);
     margin: 0 auto;
 }
-
 
 /* -------------------------
    Header
@@ -44,7 +42,6 @@ body {
         var(--green),
         var(--green-dark)
     );
-
     color: white;
     padding: 55px 0;
     text-align: center;
@@ -59,7 +56,6 @@ body {
     font-size: 1.15rem;
     opacity: 0.95;
 }
-
 
 /* -------------------------
    Main
@@ -83,9 +79,8 @@ main {
     color: var(--muted);
 }
 
-
 /* -------------------------
-   Manager
+   Manager Layout
 ------------------------- */
 
 .yoshi-manager {
@@ -93,9 +88,8 @@ main {
     gap: 35px;
 }
 
-
 /* -------------------------
-   Form
+   Form Card
 ------------------------- */
 
 .form-card {
@@ -120,36 +114,26 @@ main {
     margin-top: 5px;
 }
 
-#yoshi-form input {
-    width: 100%;
-    padding: 12px 14px;
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    font-size: 1rem;
-    outline: none;
-}
-
-#yoshi-form input:focus {
-    border-color: var(--green);
-    box-shadow: 0 0 0 3px var(--green-light);
-}
-
+#yoshi-form input,
 #yoshi-form textarea {
     width: 100%;
     padding: 12px 14px;
     border: 1px solid var(--border);
     border-radius: 10px;
     font-size: 1rem;
-    font-family: inherit;
-    resize: vertical;
     outline: none;
 }
 
+#yoshi-form textarea {
+    font-family: inherit;
+    resize: vertical;
+}
+
+#yoshi-form input:focus,
 #yoshi-form textarea:focus {
     border-color: var(--green);
     box-shadow: 0 0 0 3px var(--green-light);
 }
-
 
 /* -------------------------
    Buttons
@@ -189,18 +173,13 @@ button:active {
     color: var(--text);
 }
 
-
 /* -------------------------
-   Yoshi cards
+   Yoshi Grid & Cards
 ------------------------- */
 
 .yoshi-list {
     display: grid;
-    grid-template-columns: repeat(
-        auto-fit,
-        minmax(230px, 1fr)
-    );
-
+    grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
     gap: 25px;
 }
 
@@ -213,9 +192,7 @@ button:active {
     box-shadow: 0 5px 20px rgba(0, 0, 0, 0.06);
     overflow-wrap: anywhere;
     word-break: break-word;
-    transition:
-        transform 0.2s ease,
-        box-shadow 0.2s ease;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .yoshi-card:hover {
@@ -239,8 +216,25 @@ button:active {
     word-break: break-word;
 }
 
+.yoshi-color {
+    margin-top: 8px;
+}
 
-/* Conteneur de l'image découpée */
+.yoshi-description {
+    margin-top: 12px;
+    line-height: 1.5;
+    overflow-wrap: anywhere;
+}
+
+.yoshi-image {
+    display: block;
+    width: 180px;
+    height: 180px;
+    object-fit: contain;
+    margin: 0 auto 15px;
+}
+
+/* Sprite Asset */
 .yoshi-sprite-wrapper {
     width: 100px;
     height: 100px;
@@ -254,27 +248,24 @@ button:active {
     width: 100%;
     height: 100%;
     background-image: url('/images/yoshi_colors_asset_face.png');
-    background-size: 500% 200%; /* 5 colonnes (500%), 2 lignes (200%) */
+    background-size: 500% 200%;
     background-repeat: no-repeat;
 }
 
-/* Positionnement par couleur selon l'asset face */
-.yoshi-sprite-green  { background-position: 0% 0%; }
-.yoshi-sprite-red    { background-position: 25% 0%; }
-.yoshi-sprite-blue   { background-position: 50% 0%; }
-.yoshi-sprite-yellow { background-position: 75% 0%; }
-.yoshi-sprite-pink   { background-position: 100% 0%; }
+/* Sprites positions */
+.yoshi-sprite-green     { background-position: 0% 0%; }
+.yoshi-sprite-red       { background-position: 25% 0%; }
+.yoshi-sprite-blue      { background-position: 50% 0%; }
+.yoshi-sprite-yellow    { background-position: 75% 0%; }
+.yoshi-sprite-pink      { background-position: 100% 0%; }
 
 .yoshi-sprite-cyan,
 .yoshi-sprite-lightblue { background-position: 0% 100%; }
-.yoshi-sprite-purple   { background-position: 25% 100%; }
-.yoshi-sprite-orange   { background-position: 50% 100%; }
-.yoshi-sprite-black    { background-position: 75% 100%; }
-.yoshi-sprite-white    { background-position: 100% 100%; }
+.yoshi-sprite-purple    { background-position: 25% 100%; }
+.yoshi-sprite-orange    { background-position: 50% 100%; }
+.yoshi-sprite-black     { background-position: 75% 100%; }
+.yoshi-sprite-white     { background-position: 100% 100%; }
 
-/* -------------------------
-   Card actions
-------------------------- */
 
 .yoshi-actions {
     display: flex;
@@ -293,24 +284,6 @@ button:active {
     color: var(--red);
 }
 
-.yoshi-image {
-    display: block;
-    width: 180px;
-    height: 180px;
-    object-fit: contain;
-    margin: 0 auto 15px;
-}
-
-.yoshi-description {
-    margin-top: 12px;
-    line-height: 1.5;
-    overflow-wrap: anywhere;
-}
-
-.yoshi-color {
-    margin-top: 8px;
-}
-
 /* -------------------------
    Messages
 ------------------------- */
@@ -326,7 +299,6 @@ button:active {
     color: var(--red);
 }
 
-
 /* -------------------------
    Footer
 ------------------------- */
@@ -337,13 +309,11 @@ footer {
     color: var(--muted);
 }
 
-
 /* -------------------------
    Responsive
 ------------------------- */
 
 @media (max-width: 600px) {
-
     .hero h1 {
         font-size: 2.2rem;
     }
