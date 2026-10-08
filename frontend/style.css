@@ -134,6 +134,22 @@ main {
     box-shadow: 0 0 0 3px var(--green-light);
 }
 
+#yoshi-form textarea {
+    width: 100%;
+    padding: 12px 14px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    font-size: 1rem;
+    font-family: inherit;
+    resize: vertical;
+    outline: none;
+}
+
+#yoshi-form textarea:focus {
+    border-color: var(--green);
+    box-shadow: 0 0 0 3px var(--green-light);
+}
+
 
 /* -------------------------
    Buttons
@@ -224,6 +240,38 @@ button:active {
 }
 
 
+/* Conteneur de l'image découpée */
+.yoshi-sprite-wrapper {
+    width: 100px;
+    height: 100px;
+    margin: 0 auto 10px auto;
+    overflow: hidden;
+    border-radius: 50%;
+    background-color: #f0f0f0;
+}
+
+.yoshi-sprite {
+    width: 100%;
+    height: 100%;
+    background-image: url('/images/yoshi_colors_asset_face.png');
+    background-size: 500% 200%; /* 5 colonnes (500%), 2 lignes (200%) */
+    background-repeat: no-repeat;
+}
+
+/* Positionnement par couleur selon l'asset face */
+.yoshi-sprite-green  { background-position: 0% 0%; }
+.yoshi-sprite-red    { background-position: 25% 0%; }
+.yoshi-sprite-blue   { background-position: 50% 0%; }
+.yoshi-sprite-yellow { background-position: 75% 0%; }
+.yoshi-sprite-pink   { background-position: 100% 0%; }
+
+.yoshi-sprite-cyan,
+.yoshi-sprite-lightblue { background-position: 0% 100%; }
+.yoshi-sprite-purple   { background-position: 25% 100%; }
+.yoshi-sprite-orange   { background-position: 50% 100%; }
+.yoshi-sprite-black    { background-position: 75% 100%; }
+.yoshi-sprite-white    { background-position: 100% 100%; }
+
 /* -------------------------
    Card actions
 ------------------------- */
@@ -245,6 +293,23 @@ button:active {
     color: var(--red);
 }
 
+.yoshi-image {
+    display: block;
+    width: 180px;
+    height: 180px;
+    object-fit: contain;
+    margin: 0 auto 15px;
+}
+
+.yoshi-description {
+    margin-top: 12px;
+    line-height: 1.5;
+    overflow-wrap: anywhere;
+}
+
+.yoshi-color {
+    margin-top: 8px;
+}
 
 /* -------------------------
    Messages

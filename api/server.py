@@ -15,6 +15,10 @@ DB_CONFIG = {
 }
 
 
+def get_connection():
+    return psycopg.connect(**DB_CONFIG)
+
+
 class Handler(BaseHTTPRequestHandler):
 
     def send_json(self, data, status=200):
@@ -23,32 +27,40 @@ class Handler(BaseHTTPRequestHandler):
         self.send_response(status)
         self.send_header(
             "Content-Type",
-            "application/json; charset=utf-8",
+            "application/json; charset=utf-8"
         )
         self.send_header(
             "Content-Length",
-            str(len(body)),
+            str(len(body))
         )
         self.end_headers()
+
         self.wfile.write(body)
 
-    def send_empty(self, status=204):
-        self.send_response(status)
-        self.end_headers()
-
     def read_json(self):
+        content_length = int(
+            self.headers.get("Content-Length", 0)
+        )
+
+        if content_length == 0:
+            return {}
+
+        body = self.rfile.read(content_length)
+
         try:
-            length = int(self.headers.get("Content-Length", 0))
-            body = self.rfile.read(length)
-            return json.loads(body)
-        except (ValueError, json.JSONDecodeError):
-            return None
+            return json.loads(body.decode("utf-8"))
+        except (json.JSONDecodeError, UnicodeDecodeError):
+            raise ValueError("Invalid JSON")
 
     def get_yoshi_id(self):
         path = urlparse(self.path).path
         parts = path.rstrip("/").split("/")
 
-        if len(parts) == 4 and parts[:3] == ["", "api", "yoshis"]:
+        if len(parts) == 4 and parts[:3] == [
+            "",
+            "api",
+            "yoshis"
+        ]:
             try:
                 return int(parts[3])
             except ValueError:
@@ -56,9 +68,46 @@ class Handler(BaseHTTPRequestHandler):
 
         return None
 
-    # ---------------------------------------------------------
-    # GET
-    # ---------------------------------------------------------
+    def validate_yoshi(self, data):
+        name = data.get("name")
+        color = data.get("color")
+
+        if not isinstance(name, str) or not name.strip():
+            raise ValueError("Name is required")
+
+        if not isinstance(color, str) or not color.strip():
+            raise ValueError("Color is required")
+
+        description = data.get("description")
+
+        if description is not None and not isinstance(
+            description,
+            str
+        ):
+            raise ValueError(
+                "Description must be a string"
+            )
+
+        image = data.get("image")
+
+        if image is not None and not isinstance(
+            image,
+            str
+        ):
+            raise ValueError(
+                "Image must be a string"
+            )
+
+        return (
+            name.strip(),
+            color.strip(),
+            description.strip()
+            if isinstance(description, str)
+            else None,
+            image.strip()
+            if isinstance(image, str)
+            else None,
+        )
 
     def do_GET(self):
 
@@ -66,123 +115,99 @@ class Handler(BaseHTTPRequestHandler):
 
         # GET /api/yoshis
         if path == "/api/yoshis":
-            try:
-                with psycopg.connect(**DB_CONFIG) as conn:
-                    with conn.cursor() as cur:
-                        cur.execute(
-                            """
-                            SELECT id, name, color, created_at
-                            FROM yoshis
-                            ORDER BY id;
-                            """
-                        )
 
-                        yoshis = [
-                            {
-                                "id": row[0],
-                                "name": row[1],
-                                "color": row[2],
-                                "created_at": row[3],
-                            }
-                            for row in cur.fetchall()
-                        ]
+            with get_connection() as conn:
+                with conn.cursor() as cur:
 
-                self.send_json(yoshis)
+                    cur.execute("""
+                        SELECT
+                            id,
+                            name,
+                            color,
+                            description,
+                            image,
+                            created_at
+                        FROM yoshis
+                        ORDER BY id
+                    """)
 
-            except Exception:
-                self.send_json(
-                    {"error": "Database connection failed"},
-                    status=500,
-                )
+                    rows = cur.fetchall()
 
+            yoshis = [
+                {
+                    "id": row[0],
+                    "name": row[1],
+                    "color": row[2],
+                    "description": row[3],
+                    "image": row[4],
+                    "created_at": row[5],
+                }
+                for row in rows
+            ]
+
+            self.send_json(yoshis)
             return
 
         # GET /api/yoshis/<id>
         yoshi_id = self.get_yoshi_id()
 
         if yoshi_id is not None:
-            try:
-                with psycopg.connect(**DB_CONFIG) as conn:
-                    with conn.cursor() as cur:
-                        cur.execute(
-                            """
-                            SELECT id, name, color, created_at
-                            FROM yoshis
-                            WHERE id = %s;
-                            """,
-                            (yoshi_id,),
-                        )
 
-                        row = cur.fetchone()
+            with get_connection() as conn:
+                with conn.cursor() as cur:
 
-                if row is None:
-                    self.send_json(
-                        {"error": "Yoshi not found"},
-                        status=404,
-                    )
-                else:
-                    self.send_json(
-                        {
-                            "id": row[0],
-                            "name": row[1],
-                            "color": row[2],
-                            "created_at": row[3],
-                        }
-                    )
+                    cur.execute("""
+                        SELECT
+                            id,
+                            name,
+                            color,
+                            description,
+                            image,
+                            created_at
+                        FROM yoshis
+                        WHERE id = %s
+                    """, (yoshi_id,))
 
-            except Exception:
+                    row = cur.fetchone()
+
+            if row is None:
                 self.send_json(
-                    {"error": "Database connection failed"},
-                    status=500,
+                    {"error": "Yoshi not found"},
+                    404
                 )
+                return
+
+            self.send_json({
+                "id": row[0],
+                "name": row[1],
+                "color": row[2],
+                "description": row[3],
+                "image": row[4],
+                "created_at": row[5],
+            })
 
             return
 
         # GET /
         if path == "/":
-            try:
-                with psycopg.connect(**DB_CONFIG) as conn:
-                    with conn.cursor() as cur:
-                        cur.execute("SELECT version();")
-                        version = cur.fetchone()[0]
 
-                body = (
-                    "🥚 Welcome to Yoshi World!\n\n"
-                    "Database: PostgreSQL\n"
-                    "Status: Connected\n\n"
-                    f"{version}\n"
-                ).encode("utf-8")
+            with get_connection() as conn:
+                with conn.cursor() as cur:
+                    cur.execute("SELECT version()")
+                    version = cur.fetchone()[0]
 
-                self.send_response(200)
-
-            except Exception:
-                body = (
-                    "Database connection failed\n"
-                ).encode("utf-8")
-
-                self.send_response(500)
-
-            self.send_header(
-                "Content-Type",
-                "text/plain; charset=utf-8",
-            )
-            self.send_header(
-                "Content-Length",
-                str(len(body)),
-            )
-            self.end_headers()
-            self.wfile.write(body)
+            self.send_json({
+                "status": "ok",
+                "database": "PostgreSQL",
+                "version": version,
+            })
 
             return
 
         self.send_json(
             {"error": "Not found"},
-            status=404,
+            404
         )
-
-    # ---------------------------------------------------------
-    # POST
-    # ---------------------------------------------------------
 
     def do_POST(self):
 
@@ -191,71 +216,63 @@ class Handler(BaseHTTPRequestHandler):
         if path != "/api/yoshis":
             self.send_json(
                 {"error": "Not found"},
-                status=404,
-            )
-            return
-
-        data = self.read_json()
-
-        if not isinstance(data, dict):
-            self.send_json(
-                {"error": "Invalid JSON"},
-                status=400,
-            )
-            return
-
-        name = data.get("name")
-        color = data.get("color")
-
-        if not isinstance(name, str) or not name.strip():
-            self.send_json(
-                {"error": "name is required"},
-                status=400,
-            )
-            return
-
-        if not isinstance(color, str) or not color.strip():
-            self.send_json(
-                {"error": "color is required"},
-                status=400,
+                404
             )
             return
 
         try:
-            with psycopg.connect(**DB_CONFIG) as conn:
-                with conn.cursor() as cur:
-                    cur.execute(
-                        """
-                        INSERT INTO yoshis (name, color)
-                        VALUES (%s, %s)
-                        RETURNING id, name, color, created_at;
-                        """,
-                        (name.strip(), color.strip()),
-                    )
+            data = self.read_json()
 
-                    row = cur.fetchone()
-
-                conn.commit()
-
-            self.send_json(
-                {
-                    "id": row[0],
-                    "name": row[1],
-                    "color": row[2],
-                    "created_at": row[3],
-                },
-                status=201,
+            name, color, description, image = (
+                self.validate_yoshi(data)
             )
 
-        except Exception:
+        except ValueError as error:
             self.send_json(
-                {"error": "Database connection failed"},
-                status=500,
+                {"error": str(error)},
+                400
             )
+            return
 
-    # ---------------------------------------------------------
-    # PUT
-    # ---------------------------------------------------------
+        with get_connection() as conn:
+            with conn.cursor() as cur:
+
+                cur.execute("""
+                    INSERT INTO yoshis
+                        (
+                            name,
+                            color,
+                            description,
+                            image
+                        )
+                    VALUES
+                        (%s, %s, %s, %s)
+                    RETURNING
+                        id,
+                        name,
+                        color,
+                        description,
+                        image,
+                        created_at
+                """, (
+                    name,
+                    color,
+                    description,
+                    image,
+                ))
+
+                row = cur.fetchone()
+
+            conn.commit()
+
+        self.send_json({
+            "id": row[0],
+            "name": row[1],
+            "color": row[2],
+            "description": row[3],
+            "image": row[4],
+            "created_at": row[5],
+        }, 201)
 
     def do_PUT(self):
 
@@ -264,83 +281,69 @@ class Handler(BaseHTTPRequestHandler):
         if yoshi_id is None:
             self.send_json(
                 {"error": "Not found"},
-                status=404,
-            )
-            return
-
-        data = self.read_json()
-
-        if not isinstance(data, dict):
-            self.send_json(
-                {"error": "Invalid JSON"},
-                status=400,
-            )
-            return
-
-        name = data.get("name")
-        color = data.get("color")
-
-        if not isinstance(name, str) or not name.strip():
-            self.send_json(
-                {"error": "name is required"},
-                status=400,
-            )
-            return
-
-        if not isinstance(color, str) or not color.strip():
-            self.send_json(
-                {"error": "color is required"},
-                status=400,
+                404
             )
             return
 
         try:
-            with psycopg.connect(**DB_CONFIG) as conn:
-                with conn.cursor() as cur:
-                    cur.execute(
-                        """
-                        UPDATE yoshis
-                        SET name = %s,
-                            color = %s
-                        WHERE id = %s
-                        RETURNING id, name, color, created_at;
-                        """,
-                        (
-                            name.strip(),
-                            color.strip(),
-                            yoshi_id,
-                        ),
-                    )
+            data = self.read_json()
 
-                    row = cur.fetchone()
-
-                conn.commit()
-
-            if row is None:
-                self.send_json(
-                    {"error": "Yoshi not found"},
-                    status=404,
-                )
-                return
-
-            self.send_json(
-                {
-                    "id": row[0],
-                    "name": row[1],
-                    "color": row[2],
-                    "created_at": row[3],
-                }
+            name, color, description, image = (
+                self.validate_yoshi(data)
             )
 
-        except Exception:
+        except ValueError as error:
             self.send_json(
-                {"error": "Database connection failed"},
-                status=500,
+                {"error": str(error)},
+                400
             )
+            return
 
-    # ---------------------------------------------------------
-    # DELETE
-    # ---------------------------------------------------------
+        with get_connection() as conn:
+            with conn.cursor() as cur:
+
+                cur.execute("""
+                    UPDATE yoshis
+                    SET
+                        name = %s,
+                        color = %s,
+                        description = %s,
+                        image = %s
+                    WHERE id = %s
+                    RETURNING
+                        id,
+                        name,
+                        color,
+                        description,
+                        image,
+                        created_at
+                """, (
+                    name,
+                    color,
+                    description,
+                    image,
+                    yoshi_id,
+                ))
+
+                row = cur.fetchone()
+
+            conn.commit()
+
+        if row is None:
+            self.send_json(
+                {"error": "Yoshi not found"},
+                404
+            )
+            return
+
+        self.send_json({
+            "id": row[0],
+            "name": row[1],
+            "color": row[2],
+            "description": row[3],
+            "image": row[4],
+            "created_at": row[5],
+        })
 
     def do_DELETE(self):
 
@@ -349,41 +352,39 @@ class Handler(BaseHTTPRequestHandler):
         if yoshi_id is None:
             self.send_json(
                 {"error": "Not found"},
-                status=404,
+                404
             )
             return
 
-        try:
-            with psycopg.connect(**DB_CONFIG) as conn:
-                with conn.cursor() as cur:
-                    cur.execute(
-                        """
-                        DELETE FROM yoshis
-                        WHERE id = %s
-                        RETURNING id;
-                        """,
-                        (yoshi_id,),
-                    )
+        with get_connection() as conn:
+            with conn.cursor() as cur:
 
-                    row = cur.fetchone()
+                cur.execute("""
+                    DELETE FROM yoshis
+                    WHERE id = %s
+                    RETURNING id
+                """, (yoshi_id,))
 
-                conn.commit()
+                row = cur.fetchone()
 
-            if row is None:
-                self.send_json(
-                    {"error": "Yoshi not found"},
-                    status=404,
-                )
-                return
+            conn.commit()
 
-            self.send_empty(204)
-
-        except Exception:
+        if row is None:
             self.send_json(
-                {"error": "Database connection failed"},
-                status=500,
+                {"error": "Yoshi not found"},
+                404
             )
+            return
+
+        self.send_response(204)
+        self.end_headers()
 
 
-server = HTTPServer(("0.0.0.0", 8080), Handler)
+server = HTTPServer(
+    ("0.0.0.0", 8080),
+    Handler
+)
+
+print("Yoshi API listening on port 8080")
+
 server.serve_forever()

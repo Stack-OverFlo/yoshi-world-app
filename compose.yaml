@@ -18,7 +18,7 @@ services:
       retries: 5
       start_period: 10s
   api:
-    image: docker.io/stackoverfloo/yoshi-server:v4
+    image: docker.io/stackoverfloo/yoshi-server:v5
     container_name: yoshi-api
     environment:
       DB_HOST: db
@@ -33,7 +33,7 @@ services:
         condition: service_healthy
 
   frontend:
-    image: docker.io/stackoverfloo/yoshi-frontend:v5
+    image: docker.io/stackoverfloo/yoshi-frontend:v6
     container_name: yoshi-frontend
     ports:
       - "8081:80"

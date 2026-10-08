@@ -5,7 +5,8 @@ const formTitle = document.getElementById("form-title");
 const nameInput = document.getElementById("yoshi-name");
 const colorInput = document.getElementById("yoshi-color");
 const cancelButton = document.getElementById("cancel-button");
-
+const descriptionInput = document.getElementById("yoshi-description");
+const imageInput = document.getElementById("yoshi-image");
 let editingYoshiId = null;
 
 
@@ -24,13 +25,18 @@ async function getYoshis() {
 }
 
 
-async function createYoshi(name, color) {
+async function createYoshi(name, color, description, image) {
     const response = await fetch(API_URL, {
         method: "POST",
         headers: {
             "Content-Type": "application/json"
         },
-        body: JSON.stringify({ name, color })
+        body: JSON.stringify({
+            name,
+            color,
+            description,
+            image
+        })
     });
 
     if (!response.ok) {
@@ -40,14 +46,18 @@ async function createYoshi(name, color) {
     return response.json();
 }
 
-
-async function updateYoshi(id, name, color) {
+async function updateYoshi(id, name, color, description, image) {
     const response = await fetch(`${API_URL}/${id}`, {
         method: "PUT",
         headers: {
             "Content-Type": "application/json"
         },
-        body: JSON.stringify({ name, color })
+        body: JSON.stringify({
+            name,
+            color,
+            description,
+            image
+        })
     });
 
     if (!response.ok) {
@@ -80,47 +90,53 @@ function getYoshiIcon(color) {
         yellow: "🟡",
         gold: "🟡",
         pink: "🩷",
-        purple: "🟣"
+        purple: "🟣",
+        orange: "🟠",
+        black: "⚫",
+        white: "⚪"
     };
 
     return icons[color.toLowerCase()] || "🥚";
 }
-
 function renderYoshis(yoshis) {
     yoshiList.innerHTML = "";
 
     if (yoshis.length === 0) {
-        yoshiList.innerHTML = `
-            <p class="empty-message">
-                No Yoshi here.
-            </p>
-        `;
+        yoshiList.innerHTML = `<p class="empty-message">No Yoshi here.</p>`;
         return;
     }
 
     yoshis.forEach((yoshi) => {
         const card = document.createElement("article");
         card.className = "yoshi-card";
+
+        let imageHtml = "";
+
+        if (yoshi.image && yoshi.image.includes("yoshi_colors_asset_face")) {
+            const colorClass = yoshi.color.toLowerCase();
+            imageHtml = `
+                <div class="yoshi-sprite-wrapper">
+                    <div class="yoshi-sprite yoshi-sprite-${escapeHtml(colorClass)}"></div>
+                </div>
+            `;
+        } else if (yoshi.image) {
+            imageHtml = `
+                <img class="yoshi-image" src="${escapeHtml(yoshi.image)}" alt="${escapeHtml(yoshi.name)}"
+                     onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\"yoshi-icon\">${getYoshiIcon(yoshi.color)}</div>';">
+            `;
+        } else {
+            // Émoji par défaut
+            imageHtml = `<div class="yoshi-icon">${getYoshiIcon(yoshi.color)}</div>`;
+        }
+
         card.innerHTML = `
-            <div class="yoshi-icon">
-                ${getYoshiIcon(yoshi.color)}
-            </div>
+            ${imageHtml}
             <h3>${escapeHtml(yoshi.name)}</h3>
-            <p>
-                Color :
-                <strong>${escapeHtml(yoshi.color)}</strong>
-            </p>
+            <p class="yoshi-color">Color: <strong>${escapeHtml(yoshi.color)}</strong></p>
+            ${yoshi.description ? `<p class="yoshi-description">${escapeHtml(yoshi.description)}</p>` : ""}
             <div class="yoshi-actions">
-                <button
-                    class="edit-button"
-                    data-id="${yoshi.id}">
-                    Edit
-                </button>
-                <button
-                    class="delete-button"
-                    data-id="${yoshi.id}">
-                    Kill
-                </button>
+                <button class="edit-button" data-id="${yoshi.id}">Edit</button>
+                <button class="delete-button" data-id="${yoshi.id}">Kill</button>
             </div>
         `;
 
@@ -149,7 +165,6 @@ async function loadYoshis() {
         `;
         const yoshis = await getYoshis();
         renderYoshis(yoshis);
-
     } catch (error) {
         console.error(error);
         yoshiList.innerHTML = `
@@ -170,20 +185,31 @@ form.addEventListener("submit", async (event) => {
 
     const name = nameInput.value.trim();
     const color = colorInput.value.trim();
-
+    const description = descriptionInput.value.trim();
+    const image = imageInput.value.trim();
     if (!name || !color) {
         return;
     }
 
     try {
-        if (editingYoshiId === null) {
-            await createYoshi(name, color);
-        } else {
-            await updateYoshi(editingYoshiId, name, color);
-        }
-        resetForm();
-        await loadYoshis();
-
+       if (editingYoshiId === null) {
+        await createYoshi(
+            name,
+            color,
+            description,
+            image
+        );
+    } else {
+        await updateYoshi(
+            editingYoshiId,
+            name,
+            color,
+            description,
+            image
+        );
+    }
+    resetForm();
+    await loadYoshis();
     } catch (error) {
         console.error(error);
         alert("Yoshi just ate the server. Sorry about that...");
@@ -205,12 +231,13 @@ async function startEditYoshi(id) {
         editingYoshiId = yoshi.id;
         nameInput.value = yoshi.name;
         colorInput.value = yoshi.color;
+        descriptionInput.value = yoshi.description || "";
+        imageInput.value = yoshi.image || "";
         formTitle.textContent = "Modify a Yoshi";
         cancelButton.hidden = false;
         nameInput.focus();
     } catch (error) {
         console.error(error);
-
         alert("Impossible to load this Yoshi.");
     }
 }
